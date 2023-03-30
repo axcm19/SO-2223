@@ -1,11 +1,19 @@
-all: folders server client
+all: folders server client fifo
 
 server: bin/monitor
 
 client: bin/tracer
 
+fifo: bin/fifo
+
 folders:
 	@mkdir -p src obj bin tmp
+
+bin/fifo: obj/fifo.o
+	gcc -g obj/fifo.o -o bin/fifo
+
+obj/fifo.o: src/fifo.c
+	gcc -Wall -g -c src/fifo.c -o obj/fifo.o
 
 bin/monitor: obj/monitor.o
 	gcc -g obj/monitor.o -o bin/monitor
@@ -20,4 +28,4 @@ bin/tracer: obj/tracer.o
 	gcc -Wall -g -c src/tracer.c -o obj/tracer.o
 
 clean:
-	rm -f obj/* tmp/* bin/{tracer,monitor}
+	rm -f obj/* tmp/* bin/{tracer,monitor,fifo}

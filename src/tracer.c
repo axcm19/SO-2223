@@ -19,7 +19,7 @@ typedef struct prog{
 //################################################################################################################################
 
 
-void parse_single(char* input){
+Prog* parse_single(char* input){
     // faz o parse de uma string que representa um unico programa 
 
     /*
@@ -29,77 +29,52 @@ void parse_single(char* input){
     Prog* p = malloc(sizeof(struct prog));
     int res = 0;
     */
+    Prog* p = malloc(sizeof(struct prog));
 
-    char *found;
+    //char *found;
 
-    found = strtok(input," ");
+    //found = strtok(input," ");
 
+    char s[2] = " "; 
+    char *token;
+
+    token = strtok(input,s);
+    p->pid = 1;
+    p->prog_name = strdup(token);
+
+    int i = 0;
+
+    while( token != NULL ) {
+        printf( " %s\n", token );
+        //p->arguments[i] = strdup(token);
+
+        token = strtok(NULL, s);
+        i++;
+    }
+
+    /*
     if(found == NULL){
         printf("\t'%s'\n",input);
         puts("\tERRO! - No program found");
-        return ;
+        return NULL;
     }
 
     while(found){
         //printf("\t'%s'\n",found);
-        int fres = fork();
 
-        if(fres == 0){
-                    // codigo do filho
-
-                    int son_id = getpid();
-                    int execution = execlp(found, found, NULL);
-                    printf("TERMINEI! %d\n", execution);
-                    sleep(1);
-                    _exit(son_id);
-                    //found = strtok(NULL," ");
-
-        }
-
+        int execution = execlp(found, found, NULL);
+        printf("TERMINEI! %d\n", execution);
+        sleep(1);
         
-        int status;
-        wait(&status);
-
-        if(WEXITSTATUS(status)){
-            printf("\nTERMINEI! %d\n", WEXITSTATUS(status));
-        }
-        else{
-            printf("\nCORREU MAL! %d\n", status);
-        }  
-
+        p->prog_name = strdup(found);
+        p->arguments = NULL;
+        
         found = strtok(NULL," ");
 
     }
-
-    /*
-    while ((read = getline(&line, &len, input)) != -1) {
-
-        //-------------------------------------------------
-        //ESTE PEDAÇO DE CODIGO COLOCA A INFORMAÇÃO EXTRAIDA
-        //DA LINHA NUMA ESTRUTURA DE PROG
-
-        char* token = NULL;
-        char *line2 = line;
-        int i = 0;
-        char* arr[7];
-        while ((token = strsep(&line2, " ")) != NULL){
-            arr[i] = token;
-            i++;
-        }
-
-        
-        //p->prog_name = strdup(arr[0]);
-        //p->arguments = strdup(arr[1]);
-        res = execlp(arr[0], arr[0], NULL);
-
-        if(res > 0){
-            printf("%s", arr[0]);
-        }
-    }
-        
-    free(line); // É preciso libertar a memória alocada
     */
-    
+
+    return p;
 
 }
 
@@ -134,42 +109,34 @@ int main(int argc, char **argv) {
 
         if(strcmp(option, "execute") == 0 && strcmp(flag, "-u") == 0){
             // fazer parse single
-            parse_single(programs);
-
-            /*
-            for(i = 1; i < argc; i++){
             
-            // criar um filho para cada argumento
-                fres = fork();
-                
-                if(fres == 0){
-                    // codigo do filho
+            Prog* p = malloc(sizeof(struct prog));
+            p = parse_single(programs);
 
-                    int son_id = getpid();
-                    printf("TERMINEI! %d\n", 1);
-                    sleep(1);
-                    _exit(son_id);
-
-                }
-
+            
+            int fd = open("FIFO", O_WRONLY);
+            if(fd < 0){
+                perror("Erro no open!\n");
             }
+            
 
-            for(i = 1; i < argc; i++){
-                int status;
-                wait(&status);
+            //int res;
+            
+            
+            write(fd, &(p->prog_name), sizeof(p->prog_name));
 
-                if(WEXITSTATUS(status)){
-                    printf("\nTERMINEI! %d\n", WEXITSTATUS(status));
-                }
-                else{
-                    printf("\nCORREU MAL! %d\n", i);
-                }
-            }*/
+            execlp(p->prog_name, p->prog_name, NULL);
+                    
+            close(fd);
 
         }
 
         if(strcmp(option, "execute") == 0 && strcmp(flag, "-p") == 0){
             // fazer parse do pipe
+        }
+
+        if(strcmp(option, "status") == 0){
+            
         }
 
 
