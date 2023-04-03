@@ -9,74 +9,70 @@
 //################################################################################################################################
 
 
+// Definição da estrutura Prog
 typedef struct prog{
     int pid;
     char* prog_name;
     char** arguments;
+    int num_args;
 } Prog;
 
 
 //################################################################################################################################
 
 
-Prog* parse_single(char* input){
-    // faz o parse de uma string que representa um unico programa 
-
-    /*
-    char* line = NULL;
-    ssize_t read;
-    size_t len; // Será definido pela funçao getline quando alocar espaço para a string
-    Prog* p = malloc(sizeof(struct prog));
-    int res = 0;
-    */
-    Prog* p = malloc(sizeof(struct prog));
-
-    //char *found;
-
-    //found = strtok(input," ");
-
-    char s[2] = " "; 
-    char *token;
-
-    token = strtok(input,s);
-    p->pid = 1;
-    p->prog_name = strdup(token);
-
-    int i = 0;
-
-    while( token != NULL ) {
-        printf( " %s\n", token );
-        //p->arguments[i] = strdup(token);
-
-        token = strtok(NULL, s);
-        i++;
-    }
-
-    /*
-    if(found == NULL){
-        printf("\t'%s'\n",input);
-        puts("\tERRO! - No program found");
+// Função que converte uma string em uma estrutura Prog
+Prog* parse_single(char* str) {
+    // Aloca memória para a estrutura Prog
+    Prog* p = (Prog*) malloc(sizeof(struct prog));
+    if (p == NULL) {
+        printf("Erro: memória insuficiente!\n");
         return NULL;
     }
 
-    while(found){
-        //printf("\t'%s'\n",found);
-
-        int execution = execlp(found, found, NULL);
-        printf("TERMINEI! %d\n", execution);
-        sleep(1);
-        
-        p->prog_name = strdup(found);
-        p->arguments = NULL;
-        
-        found = strtok(NULL," ");
-
+    // Define o nome do programa como a primeira palavra da string
+    char* nome = strtok(str, " ");
+    if (nome == NULL) {
+        printf("Erro: string vazia!\n");
+        free(p);
+        return NULL;
     }
-    */
+    p->prog_name = (char*) malloc(strlen(nome) + 1);
+    strcpy(p->prog_name, nome);
+
+    // Conta o número de argumentos
+    int num_args = 0;
+    char* arg;
+    while ((arg = strtok(NULL, " "))) {
+        num_args++;
+    }
+    p->num_args = num_args;
+
+    // Aloca memória para os argumentos
+    p->arguments = (char**) malloc((num_args + 1) * sizeof(char*));
+    if (p->arguments == NULL) {
+        printf("Erro: memória insuficiente!\n");
+        free(p->prog_name);
+        free(p);
+        return NULL;
+    }
+
+    // Preenche os argumentos
+    int i = 0;
+    char* temp_str = strdup(str); // duplica a string original
+    strtok(temp_str, " "); // ignora a primeira palavra (o nome do programa)
+    while ((arg = strtok(NULL, " "))) {
+        p->arguments[i] = (char*) malloc(strlen(arg) + 1);
+        strcpy(p->arguments[i], arg);
+        i++;
+    }
+    p->arguments[i] = NULL; // ultimo argumento é NULL
+
+    free(temp_str); // libera a memória alocada por strdup()
 
     return p;
-
 }
+
 
 
 //################################################################################################################################
@@ -95,7 +91,7 @@ int main(int argc, char **argv) {
     //int fres = 0;
     printf("%d\n", argc);
 
-    if(argc < 3){
+    if(argc < 4){
         printf("Falta de argumentos!\n");
         return -1;
     }
@@ -110,22 +106,30 @@ int main(int argc, char **argv) {
         if(strcmp(option, "execute") == 0 && strcmp(flag, "-u") == 0){
             // fazer parse single
             
-            Prog* p = malloc(sizeof(struct prog));
-            p = parse_single(programs);
+            Prog* p = parse_single(programs);
 
+            //-----------------------------------------
+            // Testar se a estrutura foi de facto criada
+
+            printf("\n");
+            printf("Nome: %s\n", p->prog_name);
+            printf("Argumentos:\n");
+            for (int i = 0; i < p->num_args; i++) {
+                printf("  %s\n", p->arguments[i]);
+            }
+            //-----------------------------------------
             
             int fd = open("FIFO", O_WRONLY);
             if(fd < 0){
                 perror("Erro no open!\n");
             }
             
-
-            //int res;
-            
-            
-            write(fd, &(p->prog_name), sizeof(p->prog_name));
+            printf("\n");
+            write(fd, &(p->prog_name), strlen(p->prog_name));
 
             execlp(p->prog_name, p->prog_name, NULL);
+
+            free(p);
                     
             close(fd);
 
