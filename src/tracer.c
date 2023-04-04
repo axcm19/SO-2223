@@ -23,6 +23,8 @@ typedef struct prog{
 
 // Função que converte uma string em uma estrutura Prog
 Prog* parse_single(char* str) {
+
+    char* straux = strdup(str);
     // Aloca memória para a estrutura Prog
     Prog* p = (Prog*) malloc(sizeof(struct prog));
     if (p == NULL) {
@@ -31,7 +33,7 @@ Prog* parse_single(char* str) {
     }
 
     // Define o nome do programa como a primeira palavra da string
-    char* nome = strtok(str, " ");
+    char* nome = strtok(straux, " ");
     if (nome == NULL) {
         printf("Erro: string vazia!\n");
         free(p);
@@ -59,16 +61,18 @@ Prog* parse_single(char* str) {
 
     // Preenche os argumentos
     int i = 0;
-    char* temp_str = strdup(str); // duplica a string original
-    strtok(temp_str, " "); // ignora a primeira palavra (o nome do programa)
-    while ((arg = strtok(NULL, " "))) {
+    straux = strdup(str);// duplica a string original
+    strtok(straux, " "); // ignora a primeira palavra (o nome do programa)
+    
+    while(arg = strtok(NULL, " ")){
         p->arguments[i] = (char*) malloc(strlen(arg) + 1);
         strcpy(p->arguments[i], arg);
+        printf("%s\n",p->arguments[i]);
         i++;
     }
     p->arguments[i] = NULL; // ultimo argumento é NULL
 
-    free(temp_str); // libera a memória alocada por strdup()
+    free(straux); // libera a memória alocada por strdup()
 
     return p;
 }
@@ -106,6 +110,7 @@ int main(int argc, char **argv) {
         if(strcmp(option, "execute") == 0 && strcmp(flag, "-u") == 0){
             // fazer parse single
             
+            //printf("%s",programs);
             Prog* p = parse_single(programs);
 
             //-----------------------------------------
