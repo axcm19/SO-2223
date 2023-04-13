@@ -8,46 +8,54 @@
 #include <sys/types.h>
 #include <sys/stat.h>
 #include "../includes/prog.h"
+#include "../includes/msg.h"
+
 
 typedef struct map{
     int pid;
     int time;
-    char
+    char nome[20];
 } Map;
 
 struct map arr_map[10000];
 int posicao = 0;
 
 
-int guardaNoArray(Prog prog){
+int guardaNoArray(Msg prog){
     Map map;
     map.pid = prog.pid;
     map.time = prog.time;
+    strcpy(map.nome,prog.prog_name);
+    //map.nome = prog.prog_name;
     arr_map[posicao] = map;
-    printf("mapa pid=%d  time=%d\n",arr_map[posicao].pid,arr_map[posicao].time);
+    printf("Array mapa pid=%d  time=%d nome=%s\n",arr_map[posicao].pid,arr_map[posicao].time,arr_map[posicao].nome);
     posicao++;
     return 1;
 }
 
-int removeDoArray(aux){
+int removeDoArray(Msg aux){
     int i = 0;
     for(i;i<posicao;i++){
         if(arr_map[i].pid == aux.pid){
             for(int j = i;j<posicao;j++){
                 arr_map[j] = arr_map[j+1];
             }
-            escreveFicheiro(aux);
+            //escreveFicheiro(aux);
             posicao--;
         }
     }
 }
 
-void escreveFicheiro(aux){
+//void escreveFicheiro(aux){
     //
-}
+//}
 
 int printStatus(){
-    //
+
+    for(int i = 0;i<posicao;i++){
+        printf("Status: pid=%d time=%d nome=%s\n",arr_map[i].pid,arr_map[i].time,arr_map[i].nome);
+    }
+    return 1;
 }
 
 int main(int argc, char **argv) {
@@ -65,17 +73,18 @@ int main(int argc, char **argv) {
         //char buf[50];
         //while((res = read(fd, &buf, 50)) > 0){
         //char* buf;
-        //Prog* p = (Prog*) malloc(sizeof(Prog));
+        //Prog* p = (Prog*) malloc(sizeof(Prog));             acho que isto nao vai ser preciso
         //Prog* p2 = (Prog*) malloc(sizeof(struct prog));
-        Prog aux;
+        //Prog aux;
+        Msg aux;
         
         while((res = read(fd, &aux, sizeof(Prog))) > 0){
             write(1, &aux, res); // escreve no terminal
             printf("\nLi do pipe %d \n", aux.pid);
             printf("1\n");
             guardaNoArray(aux);
-            write(1,)
             printf("2\n");
+            printStatus();
             printf("\nLi do pipe %d \n", aux.time);
 
             /*

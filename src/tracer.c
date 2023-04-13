@@ -5,19 +5,14 @@
 #include <sys/wait.h>
 #include <string.h>
 #include <sys/time.h>
-
+#include "../includes/prog.h"
+#include "../includes/msg.h"
 
 //################################################################################################################################
 
 
 // Definição da estrutura Prog
-typedef struct prog{
-    int pid;
-    char* prog_name;
-    char** arguments;
-    int num_args;
-    int time;
-} Prog;
+
 
 
 //################################################################################################################################
@@ -159,13 +154,32 @@ int main(int argc, char **argv) {
                 if(fd < 0){
                     perror("Erro no open!\n");
                 }
+
+
+                //------------------------------------------------------------------
+                
+                Prog aux;
+                aux.pid = p->pid;
+                aux.prog_name = p->prog_name;
+                aux.arguments = p->arguments; // isto acho que nao vai ser preciso
+                aux.num_args = p->num_args;
+                aux.time = p->time;
+
+                Msg msg;
+                msg.type = 1;
+                strcpy(msg.prog_name,p->prog_name);
+                msg.pid=p->pid;                     //nova estrurura para enviar
+                //msg.prog_name = p->prog_name;
+                msg.time = p->time;
+
+                //------------------------------------------------------------------
                 
                 printf("\n");
-                write(fd, &(p->prog_name), strlen(p->prog_name));
+                write(fd, &msg, sizeof(Prog));
 
                 // execução do programa
                 sleep(5);
-                int res = execvp(p->prog_name, p->arguments);
+                //int res = execvp(p->prog_name, p->arguments);
 
 
                 //-----------------------------------------
