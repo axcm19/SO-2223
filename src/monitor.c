@@ -28,7 +28,7 @@ int guardaNoArray(Msg prog){
     strcpy(map.nome,prog.prog_name);
     //map.nome = prog.prog_name;
     arr_map[posicao] = map;
-    printf("Array mapa pid=%d  time=%d nome=%s\n",arr_map[posicao].pid,arr_map[posicao].time,arr_map[posicao].nome);
+    //printf("Array mapa pid=%d  time=%d nome=%s\n",arr_map[posicao].pid,arr_map[posicao].time,arr_map[posicao].nome);
     posicao++;
     return 1;
 }
@@ -52,13 +52,18 @@ int removeDoArray(Msg aux){
 
 int printStatus(){
 
-    for(int i = 0;i<posicao;i++){
-        printf("Status: pid=%d time=%d nome=%s\n",arr_map[i].pid,arr_map[i].time,arr_map[i].nome);
+    char message[100];
+        for(int i = 0;i<posicao;i++){
+            sprintf(message,"Status: pid=%d time=%d nome=%s\n",arr_map[i].pid,arr_map[i].time,arr_map[i].nome);
+            write(1,&message,strlen(message));
+       
     }
     return 1;
 }
 
 int main(int argc, char **argv) {
+
+    int fres = 0;
 
     // SERVIDOR LÊ DO PIPE 
     while(1){
@@ -77,28 +82,35 @@ int main(int argc, char **argv) {
         //Prog* p2 = (Prog*) malloc(sizeof(struct prog));
         //Prog aux;
         Msg aux;
+
         
         while((res = read(fd, &aux, sizeof(Prog))) > 0){
-            write(1, &aux, res); // escreve no terminal
-            printf("\nLi do pipe %d \n", aux.pid);
-            printf("1\n");
-            guardaNoArray(aux);
-            printf("2\n");
-            printStatus();
-            printf("\nLi do pipe %d \n", aux.time);
 
-            /*
-            if(aux.type == 1){
+                if(aux.type ==1){
+                //write(1, &aux, res); // escreve no terminal
+                printf("\nLi do pipe %d \n", aux.pid);
                 guardaNoArray(aux);
-
-            }
-            else if(aux.type == 2){
-                removeDoArray(aux);
-            }
-            else{
                 printStatus();
-            }
-            */
+                printf("\nLi do pipe %d \n", aux.time);
+                }else if(aux.type ==2){
+                    removeDoArray(aux);
+                }   
+
+                /*
+                if(aux.type == 1){
+                    guardaNoArray(aux);
+
+                    while((res = read(fd)))
+
+                    removeDoArray(aux);
+
+                }
+                
+                }
+                else{
+                    printStatus();
+                }
+                */
 
         }
 

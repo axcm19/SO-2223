@@ -91,6 +91,7 @@ int parse_pipeline(){
 int main(int argc, char **argv) {
 
     int fres = 0;
+    int fres2 = 0;
 
 
     if(argc < 4){
@@ -175,12 +176,28 @@ int main(int argc, char **argv) {
                 //------------------------------------------------------------------
                 
                 printf("\n");
-                write(fd, &msg, sizeof(Prog));
+                write(fd, &msg, sizeof(Msg));
 
                 // execução do programa
-                sleep(5);
-                int res = execvp(p->prog_name, p->arguments);
 
+                fres2 = fork();
+
+                if(fres2 == 0){
+                    int res = execvp(p->prog_name, p->arguments);
+                    _exit(-1);
+                }
+                int status;
+                wait(&status);
+                if(WEXITSTATUS(status) < 255){
+                    printf("\n");
+                    printf("Ended in %d ms\n", end_time_in_mill);
+                    printf("\n");
+                }
+                else{
+                    printf("\n");
+                    printf("ERROR!\n");
+                    printf("\n");
+                }
 
                 //-----------------------------------------
                 // Obter tempo final
@@ -188,15 +205,19 @@ int main(int argc, char **argv) {
                 gettimeofday(&end, NULL);
                 //get the total number of ms that the code took:
                 end_time_in_mill = ((end.tv_sec) * 1000 + (end.tv_usec) / 1000) - begin_time_in_mill;
-
+                
                 //-----------------------------------------
 
+                msg.type = 2;
+
+                write(fd,&msg,sizeof(Msg));
                 free(p);
                 close(fd);
 
                 //sleep(5);
-                _exit(-1);  // caso haja problemas no execvp
+                _exit(1);  // caso haja problemas no execvp
             }
+
 
             
             // codigo do processo pai
