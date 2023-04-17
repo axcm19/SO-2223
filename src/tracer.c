@@ -179,7 +179,7 @@ int main(int argc, char **argv) {
 
                 // execução do programa
                 sleep(5);
-                //int res = execvp(p->prog_name, p->arguments);
+                int res = execvp(p->prog_name, p->arguments);
 
 
                 //-----------------------------------------
@@ -194,7 +194,7 @@ int main(int argc, char **argv) {
                 free(p);
                 close(fd);
 
-                sleep(5);
+                //sleep(5);
                 _exit(-1);  // caso haja problemas no execvp
             }
 
@@ -202,7 +202,7 @@ int main(int argc, char **argv) {
             // codigo do processo pai
             int status;
             wait(&status);
-            if(WEXITSTATUS(status)){
+            if(WEXITSTATUS(status) < 255){
                 printf("\n");
                 printf("Ended in %d ms\n", end_time_in_mill);
                 printf("\n");
