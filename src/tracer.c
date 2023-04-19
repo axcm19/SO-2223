@@ -167,48 +167,51 @@ int main(int argc, char **argv) {
                 aux.time = p->time;
 
                 Msg msg;
-                msg.type = 1;
                 strcpy(msg.prog_name,p->prog_name);
                 msg.pid=p->pid;                     //nova estrurura para enviar
                 //msg.prog_name = p->prog_name;
                 msg.time = p->time;
-
+                if(strcmp(msg.prog_name,"status")==0) msg.type = 3;
+                else msg.type = 1;
                 //------------------------------------------------------------------
                 
                 printf("\n");
                 write(fd, &msg, sizeof(Msg));
 
                 // execução do programa
-
-                fres2 = fork();
-
-                if(fres2 == 0){
-                    int res = execvp(p->prog_name, p->arguments);
-                    _exit(-1);
-                }
-                int status;
-                wait(&status);
-                if(WEXITSTATUS(status) < 255){
-                    printf("\n");
-                    printf("Ended in %d ms\n", end_time_in_mill);
-                    printf("\n");
-                }
+                if(msg.type==3);
                 else{
-                    printf("\n");
-                    printf("ERROR!\n");
-                    printf("\n");
-                }
+                    fres2 = fork();
 
+                    if(fres2 == 0){
+                        int res = execvp(p->prog_name, p->arguments);
+                        _exit(-1);
+                    }
+                    int status;
+                    wait(&status);
+                    if(WEXITSTATUS(status) < 255){
+                        printf("\n");
+                        printf("Sucesso");
+                        printf("\n");
+                    }
+                    else{
+                        printf("\n");
+                        printf("ERROR!\n");
+                        printf("\n");
+                    }
+                }
                 //-----------------------------------------
                 // Obter tempo final
 
                 gettimeofday(&end, NULL);
                 //get the total number of ms that the code took:
                 end_time_in_mill = ((end.tv_sec) * 1000 + (end.tv_usec) / 1000) - begin_time_in_mill;
+                printf("Ended in %d ms\n", end_time_in_mill);
                 
                 //-----------------------------------------
 
                 msg.type = 2;
+                msg.time = end_time_in_mill;
 
                 write(fd,&msg,sizeof(Msg));
                 free(p);
@@ -225,7 +228,7 @@ int main(int argc, char **argv) {
             wait(&status);
             if(WEXITSTATUS(status) < 255){
                 printf("\n");
-                printf("Ended in %d ms\n", end_time_in_mill);
+                //printf("Ended in %d ms\n", end_time_in_mill);
                 printf("\n");
             }
             else{

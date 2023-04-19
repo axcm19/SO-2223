@@ -42,6 +42,7 @@ int removeDoArray(Msg aux){
             }
             //escreveFicheiro(aux);
             posicao--;
+        printf("Removido do array\n\n");
         }
     }
 }
@@ -51,10 +52,14 @@ int removeDoArray(Msg aux){
 //}
 
 int printStatus(){
-
+    int time = 0,final = 0;
+    struct timeval begin, end;
     char message[100];
         for(int i = 0;i<posicao;i++){
-            sprintf(message,"Status: pid=%d time=%d nome=%s\n",arr_map[i].pid,arr_map[i].time,arr_map[i].nome);
+            gettimeofday(&begin, NULL);
+            time = (begin.tv_sec) * 1000 + (begin.tv_usec) / 1000;
+            final = time - arr_map[i].time;
+            sprintf(message,"Status: pid=%d time=%d nome=%s\n",arr_map[i].pid,final,arr_map[i].nome);
             write(1,&message,strlen(message));
        
     }
@@ -86,31 +91,15 @@ int main(int argc, char **argv) {
         
         while((res = read(fd, &aux, sizeof(Prog))) > 0){
 
-                if(aux.type ==1){
-                //write(1, &aux, res); // escreve no terminal
-                printf("\nLi do pipe %d \n", aux.pid);
-                guardaNoArray(aux);
+            if(aux.type ==1){
+            //write(1, &aux, res); // escreve no terminal
+            printf("\nLi do pipe %d \n", aux.pid);
+            guardaNoArray(aux);
+            }else if(aux.type == 2){
+                removeDoArray(aux);
+            }else if(aux.type == 3){
                 printStatus();
-                printf("\nLi do pipe %d \n", aux.time);
-                }else if(aux.type ==2){
-                    removeDoArray(aux);
-                }   
-
-                /*
-                if(aux.type == 1){
-                    guardaNoArray(aux);
-
-                    while((res = read(fd)))
-
-                    removeDoArray(aux);
-
-                }
-                
-                }
-                else{
-                    printStatus();
-                }
-                */
+            }
 
         }
 
