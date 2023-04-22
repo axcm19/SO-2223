@@ -8,12 +8,6 @@
 #include "../includes/prog.h"
 #include "../includes/msg.h"
 
-//################################################################################################################################
-
-
-// Definição da estrutura Prog
-
-
 
 //################################################################################################################################
 
@@ -94,7 +88,7 @@ int main(int argc, char **argv) {
     int fres2 = 0;
 
 
-    if(argc < 4){
+    if(argc < 2){
         printf("Falta de argumentos!\n");
         return -1;
     }
@@ -127,7 +121,6 @@ int main(int argc, char **argv) {
 
                 //-----------------------------------------
                 
-
                 // fazer parse single
                 Prog* p = parse_single(programs);
                 int new_pid = getpid();
@@ -139,6 +132,7 @@ int main(int argc, char **argv) {
                 printf("\n");
 
                 //-----------------------------------------
+                /*
                 // Testar se a estrutura foi de facto criada
 
                 printf("\n");
@@ -149,6 +143,7 @@ int main(int argc, char **argv) {
                 for (int i = 1; i < p->num_args; i++) {
                     printf("  %s\n", p->arguments[i]);
                 }
+                */
                 //-----------------------------------------
                 
                 int fd = open("FIFO", O_WRONLY);
@@ -171,16 +166,21 @@ int main(int argc, char **argv) {
                 msg.pid=p->pid;                     //nova estrurura para enviar
                 //msg.prog_name = p->prog_name;
                 msg.time = p->time;
-                if(strcmp(msg.prog_name,"status")==0) msg.type = 3;
-                else msg.type = 1;
+
+                //não é assim que se executa o status
+                //if(strcmp(msg.prog_name,"status")==0) msg.type = 3;
+                //else msg.type = 1;
+
+                msg.type = 1;
                 //------------------------------------------------------------------
                 
                 printf("\n");
                 write(fd, &msg, sizeof(Msg));
 
                 // execução do programa
-                if(msg.type==3);
-                else{
+                //if(msg.type == 3);
+                if(msg.type == 1){
+                //else{
                     fres2 = fork();
 
                     if(fres2 == 0){
@@ -190,8 +190,13 @@ int main(int argc, char **argv) {
                     int status;
                     wait(&status);
                     if(WEXITSTATUS(status) < 255){
+
+                        gettimeofday(&end, NULL);
+                        //get the total number of ms that the code took:
+                        end_time_in_mill = ((end.tv_sec) * 1000 + (end.tv_usec) / 1000) - begin_time_in_mill;
+
                         printf("\n");
-                        printf("Sucesso");
+                        printf("Ended in %d ms\n", end_time_in_mill);
                         printf("\n");
                     }
                     else{
@@ -202,12 +207,12 @@ int main(int argc, char **argv) {
                 }
                 //-----------------------------------------
                 // Obter tempo final
-
+                /*
                 gettimeofday(&end, NULL);
                 //get the total number of ms that the code took:
                 end_time_in_mill = ((end.tv_sec) * 1000 + (end.tv_usec) / 1000) - begin_time_in_mill;
                 printf("Ended in %d ms\n", end_time_in_mill);
-                
+                */
                 //-----------------------------------------
 
                 msg.type = 2;
@@ -238,11 +243,76 @@ int main(int argc, char **argv) {
             }
         }
 
-        if(strcmp(option, "execute") == 0 && strcmp(flag, "-p") == 0){
+        else if(strcmp(option, "execute") == 0 && strcmp(flag, "-p") == 0){
             // fazer parse do pipe
         }
 
-        if(strcmp(option, "status") == 0){
+        else if(strcmp(option, "status") == 0){ //&& strcmp(flag, "-") == 0 && strcmp(programs, "-") == 0){ // por algum motivo, o modo status precisa de ler a flag e os programs 
+            printf("modo status!\n");
+            
+            int begin_time_in_mill = 0;
+            int end_time_in_mill = 0;
+
+            fres = fork();
+
+            if(fres == 0){
+                // codigo do processo filho
+
+                //-----------------------------------------
+                // Obter tempo inicial
+
+                struct timeval begin, end;
+                gettimeofday(&begin, NULL);
+                begin_time_in_mill = (begin.tv_sec) * 1000 + (begin.tv_usec) / 1000;
+        
+                //-----------------------------------------
+                
+                int fd = open("FIFO", O_WRONLY);
+                if(fd < 0){
+                    perror("Erro no open!\n");
+                }
+
+                //------------------------------------------------------------------
+                
+                Msg msg;
+                strcpy(msg.prog_name, "check_status");
+                msg.pid = getpid();;                     //nova estrutura para enviar
+                //msg.prog_name = p->prog_name;
+                msg.time = begin_time_in_mill;
+                msg.type = 3;
+
+                //------------------------------------------------------------------
+                
+                printf("\n");
+                write(fd, &msg, sizeof(Msg));
+
+                // execução do programa
+                if(msg.type == 3){
+                    printf("consegui imprimir o status!");
+                }
+                //-----------------------------------------
+                
+                close(fd);
+
+                //sleep(5);
+                _exit(1);  // caso haja problemas no execvp
+            }
+
+
+            
+            // codigo do processo pai
+            int status;
+            wait(&status);
+            if(WEXITSTATUS(status) < 255){
+                printf("\n");
+                //printf("Ended in %d ms\n", end_time_in_mill);
+                printf("\n");
+            }
+            else{
+                printf("\n");
+                printf("ERROR!\n");
+                printf("\n");
+            }
             
         }
 

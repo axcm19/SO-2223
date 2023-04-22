@@ -7,6 +7,7 @@
 #include <unistd.h>
 #include <sys/types.h>
 #include <sys/stat.h>
+#include <sys/time.h>
 #include "../includes/prog.h"
 #include "../includes/msg.h"
 
@@ -92,12 +93,14 @@ int main(int argc, char **argv) {
         while((res = read(fd, &aux, sizeof(Prog))) > 0){
 
             if(aux.type ==1){
-            //write(1, &aux, res); // escreve no terminal
-            printf("\nLi do pipe %d \n", aux.pid);
-            guardaNoArray(aux);
-            }else if(aux.type == 2){
+                //write(1, &aux, res); // escreve no terminal
+                printf("\nLi do pipe %d \n", aux.pid);
+                guardaNoArray(aux);
+            }
+            else if(aux.type == 2){
                 removeDoArray(aux);
-            }else if(aux.type == 3){
+            }
+            else if(aux.type == 3){
                 printStatus();
             }
 
