@@ -34,7 +34,7 @@ int guardaNoArray(Msg prog){
     return 1;
 }
 
-int removeDoArray(Msg aux){
+void removeDoArray(Msg aux){
     int i = 0;
     for(i;i<posicao;i++){
         if(arr_map[i].pid == aux.pid){
@@ -52,24 +52,24 @@ int removeDoArray(Msg aux){
     //
 //}
 
-int printStatus(){
+int printStatus(int fd){
     int time = 0,final = 0;
-    struct timeval begin, end;
+    struct timeval begin;
     char message[100];
-        for(int i = 0;i<posicao;i++){
-            gettimeofday(&begin, NULL);
-            time = (begin.tv_sec) * 1000 + (begin.tv_usec) / 1000;
-            final = time - arr_map[i].time;
-            sprintf(message,"Status: pid=%d time=%d nome=%s\n",arr_map[i].pid,final,arr_map[i].nome);
-            write(1,&message,strlen(message));
+    for(int i = 0;i<posicao;i++){
+        gettimeofday(&begin, NULL);
+        time = (begin.tv_sec) * 1000 + (begin.tv_usec) / 1000;
+        final = time - arr_map[i].time;
+        sprintf(message,"Status: pid=%d time=%d nome=%s\n",arr_map[i].pid,final,arr_map[i].nome);
+        write(fd,&message,strlen(message));
+        write(1,&message,strlen(message));
+
        
     }
     return 1;
 }
 
 int main(int argc, char **argv) {
-
-    int fres = 0;
 
     // SERVIDOR LÊ DO PIPE 
     while(1){
@@ -79,18 +79,17 @@ int main(int argc, char **argv) {
         if(fd < 0){
             perror("Erro no open!\n");
         }
+        int fdstatus = open("FIFOSTATUS", O_RDONLY);
+
+        if(fdstatus < 0){
+            perror("Erro no open do Status!\n");
+        }
         
         int res;
-        //char buf[50];
-        //while((res = read(fd, &buf, 50)) > 0){
-        //char* buf;
-        //Prog* p = (Prog*) malloc(sizeof(Prog));             acho que isto nao vai ser preciso
-        //Prog* p2 = (Prog*) malloc(sizeof(struct prog));
-        //Prog aux;
         Msg aux;
 
         
-        while((res = read(fd, &aux, sizeof(Prog))) > 0){
+        while((res = read(fd, &aux, sizeof(Msg))) > 0){
 
             if(aux.type ==1){
                 //write(1, &aux, res); // escreve no terminal
@@ -101,7 +100,17 @@ int main(int argc, char **argv) {
                 removeDoArray(aux);
             }
             else if(aux.type == 3){
-                printStatus();
+                int time = 0,final = 0;
+                struct timeval begin;
+                char message[100];
+                for(int i = 0;i<posicao;i++){
+                    gettimeofday(&begin, NULL);
+                    time = (begin.tv_sec) * 1000 + (begin.tv_usec) / 1000;
+                    final = time - arr_map[i].time;
+                    sprintf(message,"Status: pid=%d time=%d nome=%s\n",arr_map[i].pid,final,arr_map[i].nome);
+                    write(fdstatus,&message,strlen(message));
+                    write(1,&message,strlen(message));
+                }
             }
 
         }

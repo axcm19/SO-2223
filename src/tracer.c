@@ -86,6 +86,7 @@ int main(int argc, char **argv) {
 
     int fres = 0;
     int fres2 = 0;
+    int fres3 = 0;
 
 
     if(argc < 2){
@@ -153,25 +154,16 @@ int main(int argc, char **argv) {
 
 
                 //------------------------------------------------------------------
-                
-                Prog aux;
-                aux.pid = p->pid;
-                aux.prog_name = p->prog_name;
-                aux.arguments = p->arguments; // isto acho que nao vai ser preciso
-                aux.num_args = p->num_args;
-                aux.time = p->time;
 
                 Msg msg;
                 strcpy(msg.prog_name,p->prog_name);
                 msg.pid=p->pid;                     //nova estrurura para enviar
-                //msg.prog_name = p->prog_name;
                 msg.time = p->time;
+                msg.type = 1;
 
                 //não é assim que se executa o status
                 //if(strcmp(msg.prog_name,"status")==0) msg.type = 3;
                 //else msg.type = 1;
-
-                msg.type = 1;
                 //------------------------------------------------------------------
                 
                 printf("\n");
@@ -248,58 +240,56 @@ int main(int argc, char **argv) {
         }
 
         else if(strcmp(option, "status") == 0){ //&& strcmp(flag, "-") == 0 && strcmp(programs, "-") == 0){ // por algum motivo, o modo status precisa de ler a flag e os programs 
+            printf("ola\n");
             printf("modo status!\n");
-            
-            int begin_time_in_mill = 0;
-            int end_time_in_mill = 0;
 
-            fres = fork();
-
-            if(fres == 0){
+            fres3 = fork();
+            if(fres3 == 0){
                 // codigo do processo filho
-
-                //-----------------------------------------
-                // Obter tempo inicial
-
-                struct timeval begin, end;
-                gettimeofday(&begin, NULL);
-                begin_time_in_mill = (begin.tv_sec) * 1000 + (begin.tv_usec) / 1000;
-        
-                //-----------------------------------------
+                printf("ola\n");
                 
                 int fd = open("FIFO", O_WRONLY);
                 if(fd < 0){
                     perror("Erro no open!\n");
                 }
-
+                int fdstatus = open("FIFOSTATUS", O_WRONLY);
+                if(fdstatus < 0){
+                    perror("Erro no open do Status!\n");
+                }
                 //------------------------------------------------------------------
                 
                 Msg msg;
                 strcpy(msg.prog_name, "check_status");
-                msg.pid = getpid();;                     //nova estrutura para enviar
-                //msg.prog_name = p->prog_name;
-                msg.time = begin_time_in_mill;
+                msg.pid = getpid();
                 msg.type = 3;
 
                 //------------------------------------------------------------------
-                
-                printf("\n");
+            
+                printf("ola status\n");
                 write(fd, &msg, sizeof(Msg));
+                
+                printf("ler\n");
+                sleep(5);
+                char message[100];
+                while(read(fdstatus, &message, sizeof(char)*100))
+                write(1,&message,strlen(message));
+            
 
+                printf("ler fim\n");
                 // execução do programa
                 if(msg.type == 3){
                     printf("consegui imprimir o status!");
                 }
                 //-----------------------------------------
                 
-                close(fd);
+                close(fdstatus);
 
                 //sleep(5);
                 _exit(1);  // caso haja problemas no execvp
             }
 
 
-            
+
             // codigo do processo pai
             int status;
             wait(&status);
