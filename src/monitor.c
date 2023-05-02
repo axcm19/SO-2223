@@ -79,7 +79,8 @@ int main(int argc, char **argv) {
         if(fd < 0){
             perror("Erro no open!\n");
         }
-        int fdstatus = open("FIFOSTATUS", O_RDONLY);
+        //int fdstatus = open("FIFOSTATUS", O_RDONLY);
+        int fdstatus = open("FIFOSTATUS", O_RDWR);
 
         if(fdstatus < 0){
             perror("Erro no open do Status!\n");
@@ -103,6 +104,7 @@ int main(int argc, char **argv) {
                 int time = 0,final = 0;
                 struct timeval begin;
                 char message[100];
+
                 for(int i = 0;i<posicao;i++){
                     gettimeofday(&begin, NULL);
                     time = (begin.tv_sec) * 1000 + (begin.tv_usec) / 1000;
@@ -110,13 +112,16 @@ int main(int argc, char **argv) {
                     sprintf(message,"Status: pid=%d time=%d nome=%s\n",arr_map[i].pid,final,arr_map[i].nome);
                     write(fdstatus,&message,strlen(message));
                     write(1,&message,strlen(message));
+                    close(fdstatus); 
                 }
+
+                
             }
 
         }
 
 
-            
+         
         close(fd);
 
     }

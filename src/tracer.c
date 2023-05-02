@@ -247,12 +247,14 @@ int main(int argc, char **argv) {
             if(fres3 == 0){
                 // codigo do processo filho
                 printf("ola\n");
+
                 
                 int fd = open("FIFO", O_WRONLY);
                 if(fd < 0){
                     perror("Erro no open!\n");
                 }
-                int fdstatus = open("FIFOSTATUS", O_WRONLY);
+
+                int fdstatus = open("FIFOSTATUS", O_RDWR);
                 if(fdstatus < 0){
                     perror("Erro no open do Status!\n");
                 }
@@ -265,15 +267,18 @@ int main(int argc, char **argv) {
 
                 //------------------------------------------------------------------
             
+                //printf("ola status\n");
+                //write(fd, &msg, sizeof(Msg));
                 printf("ola status\n");
+                //write(fdstatus, &msg, sizeof(Msg));
                 write(fd, &msg, sizeof(Msg));
                 
                 printf("ler\n");
                 sleep(5);
                 char message[100];
-                while(read(fdstatus, &message, sizeof(char)*100))
-                write(1,&message,strlen(message));
-            
+                while(read(fdstatus, &message, strlen(message))){  //sizeof(char)*100)
+                    write(1,&message,strlen(message));
+                }
 
                 printf("ler fim\n");
                 // execução do programa
@@ -283,6 +288,7 @@ int main(int argc, char **argv) {
                 //-----------------------------------------
                 
                 close(fdstatus);
+                close(fd);
 
                 //sleep(5);
                 _exit(1);  // caso haja problemas no execvp
