@@ -62,9 +62,7 @@ int printStatus(int fd){
         final = time - arr_map[i].time;
         sprintf(message,"Status: pid=%d time=%d nome=%s\n",arr_map[i].pid,final,arr_map[i].nome);
         write(fd,&message,strlen(message));
-        write(1,&message,strlen(message));
-
-       
+        write(1,&message,strlen(message));    
     }
     return 1;
 }
@@ -79,13 +77,15 @@ int main(int argc, char **argv) {
         if(fd < 0){
             perror("Erro no open!\n");
         }
-        //int fdstatus = open("FIFOSTATUS", O_RDONLY);
+
+        /*
         int fdstatus = open("FIFOSTATUS", O_RDWR);
 
         if(fdstatus < 0){
             perror("Erro no open do Status!\n");
         }
-        
+        */
+
         int res;
         Msg aux;
 
@@ -106,6 +106,13 @@ int main(int argc, char **argv) {
                 char message[100];
 
                 for(int i = 0;i<posicao;i++){
+
+                    int fdstatus = open(aux.prog_name, O_RDWR);
+
+                    if(fdstatus < 0){
+                        perror("Erro no open do Status!\n");
+                    }
+
                     gettimeofday(&begin, NULL);
                     time = (begin.tv_sec) * 1000 + (begin.tv_usec) / 1000;
                     final = time - arr_map[i].time;
@@ -121,7 +128,7 @@ int main(int argc, char **argv) {
         }
 
 
-         
+        //close(fdstatus); 
         close(fd);
 
     }

@@ -240,47 +240,54 @@ int main(int argc, char **argv) {
         }
 
         else if(strcmp(option, "status") == 0){ //&& strcmp(flag, "-") == 0 && strcmp(programs, "-") == 0){ // por algum motivo, o modo status precisa de ler a flag e os programs 
-            printf("ola\n");
-            printf("modo status!\n");
 
             fres3 = fork();
             if(fres3 == 0){
                 // codigo do processo filho
-                printf("ola\n");
-
+               
+                int pid = getpid();
+                
                 
                 int fd = open("FIFO", O_WRONLY);
                 if(fd < 0){
                     perror("Erro no open!\n");
                 }
 
-                int fdstatus = open("FIFOSTATUS", O_RDWR);
+                char fifoname[100];
+                sprintf(fifoname,"FIFO-%d", pid);
+
+                int fazFifo = mkfifo(fifoname, 0640);
+                if(fazFifo < 0){
+                    perror("Erro no mkfifo Status!\n");
+                }
+
+                int fdstatus = open(fifoname, O_RDWR);
                 if(fdstatus < 0){
                     perror("Erro no open do Status!\n");
                 }
                 //------------------------------------------------------------------
                 
                 Msg msg;
-                strcpy(msg.prog_name, "check_status");
+                strcpy(msg.prog_name, fifoname);
                 msg.pid = getpid();
                 msg.type = 3;
+                
 
                 //------------------------------------------------------------------
             
-                //printf("ola status\n");
+            
                 //write(fd, &msg, sizeof(Msg));
-                printf("ola status\n");
                 //write(fdstatus, &msg, sizeof(Msg));
                 write(fd, &msg, sizeof(Msg));
                 
-                printf("ler\n");
                 sleep(5);
                 char message[100];
-                while(read(fdstatus, &message, strlen(message))){  //sizeof(char)*100)
+                int res;
+
+                while((res = read(fdstatus, &message, strlen(message))) == strlen(message)){
                     write(1,&message,strlen(message));
                 }
 
-                printf("ler fim\n");
                 // execução do programa
                 if(msg.type == 3){
                     printf("consegui imprimir o status!");
@@ -291,6 +298,7 @@ int main(int argc, char **argv) {
                 close(fd);
 
                 //sleep(5);
+                remove(fifoname);
                 _exit(1);  // caso haja problemas no execvp
             }
 
