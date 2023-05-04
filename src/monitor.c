@@ -36,7 +36,7 @@ int guardaNoArray(Msg prog){
 
 void removeDoArray(Msg aux){
     int i = 0;
-    for(i;i<posicao;i++){
+    for(i = 0; i < posicao; i++){
         if(arr_map[i].pid == aux.pid){
             for(int j = i;j<posicao;j++){
                 arr_map[j] = arr_map[j+1];
@@ -101,32 +101,50 @@ int main(int argc, char **argv) {
                 removeDoArray(aux);
             }
             else if(aux.type == 3){
-                int time = 0,final = 0;
-                struct timeval begin;
-                char message[100];
 
-                for(int i = 0;i<posicao;i++){
+                int fres = fork();
+                if(fres == 0){
+
+                    int time = 0,final = 0;
+                    struct timeval begin;
+                    char message[100];
 
                     int fdstatus = open(aux.prog_name, O_RDWR);
 
                     if(fdstatus < 0){
                         perror("Erro no open do Status!\n");
                     }
+                    
+                    for(int i = 0; i < posicao; i++){
 
-                    gettimeofday(&begin, NULL);
-                    time = (begin.tv_sec) * 1000 + (begin.tv_usec) / 1000;
-                    final = time - arr_map[i].time;
-                    sprintf(message,"Status: pid=%d time=%d nome=%s\n",arr_map[i].pid,final,arr_map[i].nome);
-                    write(fdstatus,&message,strlen(message));
-                    write(1,&message,strlen(message));
+                        gettimeofday(&begin, NULL);
+                        time = (begin.tv_sec) * 1000 + (begin.tv_usec) / 1000;
+                        final = time - arr_map[i].time;
+                        sprintf(message,"Status: pid=%d time=%d nome=%s\n",arr_map[i].pid,final,arr_map[i].nome);
+                        write(fdstatus,&message,strlen(message));
+                        write(1,&message,strlen(message));
+                    }
+
                     close(fdstatus); 
+                    _exit(1);
                 }
-
-                
+                else{
+                    // codigo do processo pai
+                    int status;
+                    wait(&status);
+                    if(WEXITSTATUS(status) < 255){
+                        printf("\n");
+                        printf("Imprimi o status!");
+                        printf("\n");
+                    }
+                    else{
+                        printf("\n");
+                        printf("ERROR!\n");
+                        printf("\n");
+                    }
+                }
             }
-
         }
-
 
         //close(fdstatus); 
         close(fd);

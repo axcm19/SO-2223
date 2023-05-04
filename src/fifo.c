@@ -16,11 +16,12 @@ int main(int argc, char **argv) {
     if(fd < 0){
         perror("Erro no mkfifo!\n");
     }
+    /*
     int fdstatus = mkfifo("FIFOSTATUS", 0640);
     if(fdstatus < 0){
         perror("Erro no mkfifo Status!\n");
     }
-        
+    */
         
     return 0;
 

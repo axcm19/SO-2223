@@ -5,6 +5,7 @@
 #include <sys/wait.h>
 #include <string.h>
 #include <sys/time.h>
+#include <sys/stat.h>
 #include "../includes/prog.h"
 #include "../includes/msg.h"
 
@@ -214,7 +215,6 @@ int main(int argc, char **argv) {
                 free(p);
                 close(fd);
 
-                //sleep(5);
                 _exit(1);  // caso haja problemas no execvp
             }
 
@@ -245,7 +245,7 @@ int main(int argc, char **argv) {
             if(fres3 == 0){
                 // codigo do processo filho
                
-                int pid = getpid();
+                int id = getpid();
                 
                 
                 int fd = open("FIFO", O_WRONLY);
@@ -254,73 +254,65 @@ int main(int argc, char **argv) {
                 }
 
                 char fifoname[100];
-                sprintf(fifoname,"FIFO-%d", pid);
+                sprintf(fifoname,"FIFO-%d", id);
 
                 int fazFifo = mkfifo(fifoname, 0640);
                 if(fazFifo < 0){
                     perror("Erro no mkfifo Status!\n");
                 }
 
-                int fdstatus = open(fifoname, O_RDWR);
-                if(fdstatus < 0){
-                    perror("Erro no open do Status!\n");
-                }
                 //------------------------------------------------------------------
                 
                 Msg msg;
                 strcpy(msg.prog_name, fifoname);
-                msg.pid = getpid();
+                msg.pid = id;
                 msg.type = 3;
                 
 
                 //------------------------------------------------------------------
             
-            
-                //write(fd, &msg, sizeof(Msg));
-                //write(fdstatus, &msg, sizeof(Msg));
                 write(fd, &msg, sizeof(Msg));
+                close(fd);
                 
-                sleep(5);
                 char message[100];
                 int res;
 
-                while((res = read(fdstatus, &message, strlen(message))) == strlen(message)){
-                    write(1,&message,strlen(message));
+                int fdstatus = open(fifoname, O_RDWR);
+                if(fdstatus < 0){
+                    perror("Erro no open do Status!\n");
                 }
 
-                // execução do programa
-                if(msg.type == 3){
-                    printf("consegui imprimir o status!");
+                //while((res = read(fdstatus, &message, strlen(message))) == strlen(message)){
+                while((res = read(fdstatus, &message, strlen(message))) > 0){
+                    write(1,&message,strlen(message));
                 }
                 //-----------------------------------------
                 
+        
                 close(fdstatus);
-                close(fd);
-
-                //sleep(5);
                 remove(fifoname);
+
                 _exit(1);  // caso haja problemas no execvp
             }
 
 
-
-            // codigo do processo pai
-            int status;
-            wait(&status);
-            if(WEXITSTATUS(status) < 255){
-                printf("\n");
-                //printf("Ended in %d ms\n", end_time_in_mill);
-                printf("\n");
-            }
             else{
-                printf("\n");
-                printf("ERROR!\n");
-                printf("\n");
+                // codigo do processo pai
+                int status;
+                //wait(&status);
+                if(WEXITSTATUS(status) < 255){
+                    printf("\n");
+                    printf("Consegui imprimir o status!");
+                    printf("\n");
+                }
+                else{
+                    printf("\n");
+                    printf("ERROR!\n");
+                    printf("\n");
+                }
             }
             
         }
-
-
     }
         
     return 0;
