@@ -41,16 +41,27 @@ void removeDoArray(Msg aux){
             for(int j = i;j<posicao;j++){
                 arr_map[j] = arr_map[j+1];
             }
-            //escreveFicheiro(aux);
+            escreveFicheiro(aux);
             posicao--;
         printf("Removido do array\n\n");
         }
     }
 }
 
-//void escreveFicheiro(aux){
-    //
-//}
+void escreveFicheiro(Msg aux){
+    char nomeFicheiro[20];
+    char conteudoFicheiro[100];
+    int time = 0;
+    struct timeval end;
+    gettimeofday(&end, NULL);
+    time = (end.tv_sec) * 1000 + (end.tv_usec) / 1000;
+    sprintf(nomeFicheiro,"%d.txt",aux.pid);
+    sprintf(conteudoFicheiro,"Nome: %s\nTempo de Execucao: %dms\n",aux.prog_name,time);
+    int file = open(nomeFicheiro, O_RDWR | O_CREAT,0666);
+    write(file,conteudoFicheiro,strlen(conteudoFicheiro));
+
+
+}
 
 int printStatus(int fd){
     int time = 0,final = 0;
