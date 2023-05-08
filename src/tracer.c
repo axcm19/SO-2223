@@ -295,7 +295,7 @@ int main(int argc, char **argv) {
                 _exit(1);  // caso haja problemas no execvp
             }
 
-
+            
             else{
                 // codigo do processo pai
                 int status;
