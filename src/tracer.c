@@ -75,7 +75,21 @@ Prog* parse_single(char* str) {
 //################################################################################################################################
 
 
-int parse_pipeline(){
+int parse_pipeline(char* programs){
+    // TESTE DE PARSE DO PIPELINE POR ENQUANTO!
+
+    char* string;
+    int i = 0;
+
+    char* command = strdup(programs);
+    while((string = strsep(&command, "|")) != NULL){
+        Prog* p = (Prog*) malloc(sizeof(struct prog));
+        p = parse_single(string);
+        i++;
+        printf("%s\n", p->prog_name);
+        free(p);
+    }
+
     return 0;
 }
 
@@ -87,6 +101,7 @@ int main(int argc, char **argv) {
 
     int fres = 0;
     int fres2 = 0;
+    int fres3 = 0;
 
     if(argc < 2){
         printf("Falta de argumentos!\n");
@@ -160,18 +175,14 @@ int main(int argc, char **argv) {
                 msg.time = p->time;
                 msg.type = 1;
 
-                //não é assim que se executa o status
-                //if(strcmp(msg.prog_name,"status")==0) msg.type = 3;
-                //else msg.type = 1;
                 //------------------------------------------------------------------
                 
                 printf("\n");
                 write(fd, &msg, sizeof(Msg));
 
                 // execução do programa
-                //if(msg.type == 3);
                 if(msg.type == 1){
-                //else{
+
                     fres2 = fork();
 
                     if(fres2 == 0){
@@ -196,14 +207,7 @@ int main(int argc, char **argv) {
                         printf("\n");
                     }
                 }
-                //-----------------------------------------
-                // Obter tempo final
-                /*
-                gettimeofday(&end, NULL);
-                //get the total number of ms that the code took:
-                end_time_in_mill = ((end.tv_sec) * 1000 + (end.tv_usec) / 1000) - begin_time_in_mill;
-                printf("Ended in %d ms\n", end_time_in_mill);
-                */
+
                 //-----------------------------------------
 
                 msg.type = 2;
@@ -235,6 +239,14 @@ int main(int argc, char **argv) {
 
         else if(strcmp(option, "execute") == 0 && strcmp(flag, "-p") == 0){
             // fazer parse do pipe
+            parse_pipeline(programs);
+
+            // gera um novo processo
+            //int fres3 = fork();
+            //if(fres3 == 0){
+
+            //}
+
         }
 
         else if(strcmp(option, "status") == 0){ //&& strcmp(flag, "-") == 0 && strcmp(programs, "-") == 0){ // por algum motivo, o modo status precisa de ler a flag e os programs 
@@ -259,8 +271,7 @@ int main(int argc, char **argv) {
                 Msg msg;
                 strcpy(msg.prog_name, fifoname);
                 msg.pid = id;
-                msg.type = 3;
-                
+                msg.type = 3; 
 
                 //------------------------------------------------------------------
             
