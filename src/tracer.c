@@ -87,8 +87,6 @@ int main(int argc, char **argv) {
 
     int fres = 0;
     int fres2 = 0;
-    int fres3 = 0;
-
 
     if(argc < 2){
         printf("Falta de argumentos!\n");
@@ -241,12 +239,7 @@ int main(int argc, char **argv) {
 
         else if(strcmp(option, "status") == 0){ //&& strcmp(flag, "-") == 0 && strcmp(programs, "-") == 0){ // por algum motivo, o modo status precisa de ler a flag e os programs 
 
-            fres3 = fork();
-            if(fres3 == 0){
-                // codigo do processo filho
-               
                 int id = getpid();
-                
                 
                 int fd = open("FIFO", O_WRONLY);
                 if(fd < 0){
@@ -277,40 +270,21 @@ int main(int argc, char **argv) {
                 char message[100];
                 int res;
 
-                int fdstatus = open(fifoname, O_RDWR);
+                int fdstatus = open(fifoname, O_RDONLY);
                 if(fdstatus < 0){
                     perror("Erro no open do Status!\n");
                 }
 
-                //while((res = read(fdstatus, &message, strlen(message))) == strlen(message)){
+            
                 while((res = read(fdstatus, &message, strlen(message))) > 0){
                     write(1,&message,strlen(message));
                 }
+
                 //-----------------------------------------
-                
-        
+                 
                 close(fdstatus);
-                remove(fifoname);
-
-                _exit(1);  // caso haja problemas no execvp
-            }
-
-            
-            else{
-                // codigo do processo pai
-                int status;
-                //wait(&status);
-                if(WEXITSTATUS(status) < 255){
-                    printf("\n");
-                    printf("Consegui imprimir o status!");
-                    printf("\n");
-                }
-                else{
-                    printf("\n");
-                    printf("ERROR!\n");
-                    printf("\n");
-                }
-            }
+                unlink(fifoname);
+                printf("Consegui imprimir o status!\n");
             
         }
     }

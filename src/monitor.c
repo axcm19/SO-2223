@@ -125,18 +125,20 @@ int main(int argc, char **argv) {
                     struct timeval begin;
                     char message[100];
 
-                    int fdstatus = open(aux.prog_name, O_RDWR);
+                    int fdstatus = open(aux.prog_name, O_WRONLY);
 
                     if(fdstatus < 0){
                         perror("Erro no open do Status!\n");
                     }
+                    
                     
                     for(int i = 0; i < posicao; i++){
 
                         gettimeofday(&begin, NULL);
                         time = (begin.tv_sec) * 1000 + (begin.tv_usec) / 1000;
                         final = time - arr_map[i].time;
-                        sprintf(message,"Status: pid=%d time=%d nome=%s\n",arr_map[i].pid,final,arr_map[i].nome);
+                        //sprintf(message,"Status: pid=%d time=%d nome=%s\n",arr_map[i].pid,final,arr_map[i].nome);
+                        sprintf(message,"%d %s %d ms\n",arr_map[i].pid, arr_map[i].nome, final);
                         write(fdstatus,&message,strlen(message));
                         write(1,&message,strlen(message));
                     }
@@ -162,7 +164,6 @@ int main(int argc, char **argv) {
             }
         }
 
-        //close(fdstatus); 
         close(fd);
 
     }
