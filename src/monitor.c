@@ -18,7 +18,7 @@ typedef struct map{
     char nome[20];
 } Map;
 
-struct map arr_map[10000];
+struct map arr_map[1000000];
 int posicao = 0;
 
 
