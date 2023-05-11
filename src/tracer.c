@@ -75,22 +75,123 @@ Prog* parse_single(char* str) {
 //################################################################################################################################
 
 
-int parse_pipeline(char* programs){
-    // TESTE DE PARSE DO PIPELINE POR ENQUANTO!
-
-    char* string;
-    int i = 0;
-
-    char* command = strdup(programs);
-    while((string = strsep(&command, "|")) != NULL){
-        Prog* p = (Prog*) malloc(sizeof(struct prog));
-        p = parse_single(string);
-        i++;
-        printf("%s\n", p->prog_name);
-        free(p);
+char** parse_pipeline(const char* commandString, int* numCommands) {
+    // Conta o número de comandos separados por "|"
+    int count = 1;
+    for (int i = 0; commandString[i] != '\0'; i++) {
+        if (commandString[i] == '|')
+            count++;
     }
 
-    return 0;
+    // Aloca memória para o array de comandos
+    char** commands = (char**)malloc(count * sizeof(char*));
+    if (commands == NULL) {
+        printf("Erro ao alocar memória.\n");
+        exit(1);
+    }
+
+    // Copia cada comando para o array de comandos
+    char* commandCopy = strdup(commandString);
+    char* token = strtok(commandCopy, "|");
+    int i = 0;
+    while (token != NULL) {
+        commands[i] = strdup(token);
+        token = strtok(NULL, "|");
+        i++;
+    }
+    free(commandCopy);
+
+    // Atualiza o número de comandos
+    *numCommands = count;
+
+    return commands;
+}
+
+
+int exec_command(char* cmd){
+    char* args[10]; // assumimos que nenhum comando tem mais que 10 argumentos
+    //char* string;
+    int i = 0;
+
+    char* command = strdup(cmd);
+    char *string = strtok(command, " ");
+
+    while(string != NULL){
+        args[i] = string;
+		i++;
+		string = strtok(NULL, " ");
+	}
+    args[i] = NULL;
+    return execvp(args[0], args);
+}
+
+
+void execute_pipeline(char** commands, int num){
+    
+    int n_comandos = num;
+    int pipes[n_comandos - 1][2]; 
+
+    for(int i = 0; i < n_comandos; i++){
+        if(i == 0){
+            //cabeça da pipeline
+            pipe(pipes[i]);
+
+            int fres = fork();
+            if(fres == 0){
+                //codigo do filho
+
+                close(pipes[i][0]); //fechar canal de leitura 
+                dup2(pipes[i][1], 1);
+                close(pipes[i][1]);
+
+                exec_command(commands[i]);
+            }
+            else{
+                //codigo do pai
+                close(pipes[i][1]); //fechar canal de escrita 
+            }
+        }
+        if(i == n_comandos - 1){
+            //cauda do pipeline
+            int fres = fork();
+            if(fres == 0){
+                //codigo do filho
+                dup2(pipes[i-1][0], 0);     
+                close(pipes[i-1][0]); //fechar canal de leitura 
+
+                exec_command(commands[i]);
+            }
+            else{
+                //codigo do pai
+                close(pipes[i-1][0]); //fechar canal de leitura
+            }
+        }   
+        else{
+            // nem na cabeça nem na cauda
+            pipe(pipes[i]);
+            int fres = fork();
+            if(fres == 0){
+                //codigo do filho
+                dup2(pipes[i-1][0], 0);
+                close(pipes[i-1][0]);
+                dup2(pipes[i][1], 1);
+                close(pipes[i][1]);
+                close(pipes[i][0]);
+
+                exec_command(commands[i]);
+            }
+            else{
+                //codigo do pai
+                close(pipes[i][1]);
+                close(pipes[i-1][0]);
+            }
+        }
+    }
+    
+    int j;
+    for(j = 0; j < n_comandos; j++){
+        wait(NULL);
+    }
 }
 
 
@@ -242,17 +343,83 @@ int main(int argc, char **argv) {
             }
             else if(strcmp(flag, "-p") == 0){
                 // fazer parse do pipe
-            parse_pipeline(programs);
 
-            // gera um novo processo
-            //int fres3 = fork();
-            //if(fres3 == 0){
+                int begin_time_in_mill = 0;
+                int end_time_in_mill = 0;
 
-            //}
+                int fres3 = fork();
+                if(fres3 == 0){
+
+                    //------------------------------------------------------------------
+                
+                    int pid = getpid();
+
+                    struct timeval begin, end;
+                    gettimeofday(&begin, NULL);
+                    begin_time_in_mill = (begin.tv_sec) * 1000 + (begin.tv_usec) / 1000;
+
+                    printf("\n");
+                    printf("Running PID %d\n", pid);
+                    printf("\n");
+
+                    int fd = open("FIFO", O_WRONLY);
+                    if(fd < 0){
+                        perror("Erro no open!\n");
+                    }
+
+
+                    //------------------------------------------------------------------
+
+                    Msg msg;
+                    strcpy(msg.prog_name, programs);
+                    msg.pid = pid;                     //nova estrurura para enviar
+                    msg.time = begin_time_in_mill;
+                    msg.type = 1;
+
+                    printf("\n");
+                    write(fd, &msg, sizeof(Msg));
+
+                    //------------------------------------------------------------------
+
+                    int num;
+                    char** commands = parse_pipeline(programs, &num);
+                    execute_pipeline(commands, num);  
+
+                    gettimeofday(&end, NULL);
+                    //get the total number of ms that the code took:
+                    end_time_in_mill = ((end.tv_sec) * 1000 + (end.tv_usec) / 1000) - begin_time_in_mill;
+
+                    printf("\n");
+                    printf("Ended in %d ms\n", end_time_in_mill);
+                    printf("\n");
+
+                    //------------------------------------------------------------------
+
+                    msg.type = 2;
+                    msg.time = end_time_in_mill;
+
+                    write(fd,&msg,sizeof(Msg));
+                    close(fd);
+
+                    _exit(1);  
+                }
+                // codigo do processo pai
+                int status;
+                wait(&status);
+                if(WEXITSTATUS(status) < 255){
+                    printf("\n");
+                    //printf("Ended in %d ms\n", end_time_in_mill);
+                    printf("\n");
+                }
+                else{
+                    printf("\n");
+                    printf("ERROR!\n");
+                    printf("\n");
+                }
             }
         }
 
-        else if(strcmp(option, "status") == 0){ //&& strcmp(flag, "-") == 0 && strcmp(programs, "-") == 0){ // por algum motivo, o modo status precisa de ler a flag e os programs 
+        else if(strcmp(option, "status") == 0){
 
                 int id = getpid();
                 
