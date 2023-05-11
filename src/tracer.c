@@ -101,7 +101,6 @@ int main(int argc, char **argv) {
 
     int fres = 0;
     int fres2 = 0;
-    int fres3 = 0;
 
     if(argc < 2){
         printf("Falta de argumentos!\n");
@@ -112,133 +111,137 @@ int main(int argc, char **argv) {
 
 
         char* option = strdup(argv[1]); // pode ser "execute" ou "status"
-        char* flag = strdup(argv[2]);  // pode ser "-u" para programa individual ou "-p" para pipeline de programas
-        char* programs = strdup(argv[3]);  // string que contem os programas a executar mais os argumentos
+        //char* flag = strdup(argv[2]);  // pode ser "-u" para programa individual ou "-p" para pipeline de programas
+        //char* programs = strdup(argv[3]);  // string que contem os programas a executar mais os argumentos
         
 
-        if(strcmp(option, "execute") == 0 && strcmp(flag, "-u") == 0){
+        if(strcmp(option, "execute") == 0){
 
-            int begin_time_in_mill = 0;
-            int end_time_in_mill = 0;
+            char* flag = strdup(argv[2]);  // pode ser "-u" para programa individual ou "-p" para pipeline de programas
+            char* programs = strdup(argv[3]);  // string que contem os programas a executar mais os argumentos
 
-            // gera um novo processo
-            fres = fork();
+            if(strcmp(flag, "-u") == 0){
 
-            if(fres == 0){
-                // codigo do processo filho
+                int begin_time_in_mill = 0;
+                int end_time_in_mill = 0;
 
-                //-----------------------------------------
-                // Obter tempo inicial
+                // gera um novo processo
+                fres = fork();
 
-                struct timeval begin, end;
-                gettimeofday(&begin, NULL);
-                begin_time_in_mill = (begin.tv_sec) * 1000 + (begin.tv_usec) / 1000;
+                if(fres == 0){
+                    // codigo do processo filho
 
-                //-----------------------------------------
-                
-                // fazer parse single
-                Prog* p = parse_single(programs);
-                int new_pid = getpid();
-                p->pid = new_pid;
-                p->time = begin_time_in_mill;
+                    //-----------------------------------------
+                    // Obter tempo inicial
 
-                printf("\n");
-                printf("Running PID %d\n", p->pid);
-                printf("\n");
+                    struct timeval begin, end;
+                    gettimeofday(&begin, NULL);
+                    begin_time_in_mill = (begin.tv_sec) * 1000 + (begin.tv_usec) / 1000;
 
-                //-----------------------------------------
-                /*
-                // Testar se a estrutura foi de facto criada
+                    //-----------------------------------------
+                    
+                    // fazer parse single
+                    Prog* p = parse_single(programs);
+                    int new_pid = getpid();
+                    p->pid = new_pid;
+                    p->time = begin_time_in_mill;
 
-                printf("\n");
-                printf("ID Processo: %d\n", p->pid);
-                printf("Nome: %s\n", p->prog_name);
-                printf("Tempo em que iniciou: %d\n", p->time);
-                printf("Argumentos:\n");
-                for (int i = 1; i < p->num_args; i++) {
-                    printf("  %s\n", p->arguments[i]);
-                }
-                */
-                //-----------------------------------------
-                
-                int fd = open("FIFO", O_WRONLY);
-                if(fd < 0){
-                    perror("Erro no open!\n");
-                }
+                    printf("\n");
+                    printf("Running PID %d\n", p->pid);
+                    printf("\n");
 
+                    //-----------------------------------------
+                    /*
+                    // Testar se a estrutura foi de facto criada
 
-                //------------------------------------------------------------------
-
-                Msg msg;
-                strcpy(msg.prog_name,p->prog_name);
-                msg.pid=p->pid;                     //nova estrurura para enviar
-                msg.time = p->time;
-                msg.type = 1;
-
-                //------------------------------------------------------------------
-                
-                printf("\n");
-                write(fd, &msg, sizeof(Msg));
-
-                // execução do programa
-                if(msg.type == 1){
-
-                    fres2 = fork();
-
-                    if(fres2 == 0){
-                        int res = execvp(p->prog_name, p->arguments);
-                        _exit(-1);
+                    printf("\n");
+                    printf("ID Processo: %d\n", p->pid);
+                    printf("Nome: %s\n", p->prog_name);
+                    printf("Tempo em que iniciou: %d\n", p->time);
+                    printf("Argumentos:\n");
+                    for (int i = 1; i < p->num_args; i++) {
+                        printf("  %s\n", p->arguments[i]);
                     }
-                    int status;
-                    wait(&status);
-                    if(WEXITSTATUS(status) < 255){
-
-                        gettimeofday(&end, NULL);
-                        //get the total number of ms that the code took:
-                        end_time_in_mill = ((end.tv_sec) * 1000 + (end.tv_usec) / 1000) - begin_time_in_mill;
-
-                        printf("\n");
-                        printf("Ended in %d ms\n", end_time_in_mill);
-                        printf("\n");
+                    */
+                    //-----------------------------------------
+                    
+                    int fd = open("FIFO", O_WRONLY);
+                    if(fd < 0){
+                        perror("Erro no open!\n");
                     }
-                    else{
-                        printf("\n");
-                        printf("ERROR!\n");
-                        printf("\n");
+
+
+                    //------------------------------------------------------------------
+
+                    Msg msg;
+                    strcpy(msg.prog_name,p->prog_name);
+                    msg.pid=p->pid;                     //nova estrurura para enviar
+                    msg.time = p->time;
+                    msg.type = 1;
+
+                    //------------------------------------------------------------------
+                    
+                    printf("\n");
+                    write(fd, &msg, sizeof(Msg));
+
+                    // execução do programa
+                    if(msg.type == 1){
+
+                        fres2 = fork();
+
+                        if(fres2 == 0){
+                            int res = execvp(p->prog_name, p->arguments);
+                            _exit(-1);
+                        }
+                        int status;
+                        wait(&status);
+                        if(WEXITSTATUS(status) < 255){
+
+                            gettimeofday(&end, NULL);
+                            //get the total number of ms that the code took:
+                            end_time_in_mill = ((end.tv_sec) * 1000 + (end.tv_usec) / 1000) - begin_time_in_mill;
+
+                            printf("\n");
+                            printf("Ended in %d ms\n", end_time_in_mill);
+                            printf("\n");
+                        }
+                        else{
+                            printf("\n");
+                            printf("ERROR!\n");
+                            printf("\n");
+                        }
                     }
+
+                    //-----------------------------------------
+
+                    msg.type = 2;
+                    msg.time = end_time_in_mill;
+
+                    write(fd,&msg,sizeof(Msg));
+                    free(p);
+                    close(fd);
+
+                    _exit(1);  // caso haja problemas no execvp
                 }
 
-                //-----------------------------------------
 
-                msg.type = 2;
-                msg.time = end_time_in_mill;
-
-                write(fd,&msg,sizeof(Msg));
-                free(p);
-                close(fd);
-
-                _exit(1);  // caso haja problemas no execvp
+                
+                // codigo do processo pai
+                int status;
+                wait(&status);
+                if(WEXITSTATUS(status) < 255){
+                    printf("\n");
+                    //printf("Ended in %d ms\n", end_time_in_mill);
+                    printf("\n");
+                }
+                else{
+                    printf("\n");
+                    printf("ERROR!\n");
+                    printf("\n");
+                }
             }
-
-
-            
-            // codigo do processo pai
-            int status;
-            wait(&status);
-            if(WEXITSTATUS(status) < 255){
-                printf("\n");
-                //printf("Ended in %d ms\n", end_time_in_mill);
-                printf("\n");
-            }
-            else{
-                printf("\n");
-                printf("ERROR!\n");
-                printf("\n");
-            }
-        }
-
-        else if(strcmp(option, "execute") == 0 && strcmp(flag, "-p") == 0){
-            // fazer parse do pipe
+            else if(strcmp(flag, "-p") == 0){
+                // fazer parse do pipe
             parse_pipeline(programs);
 
             // gera um novo processo
@@ -246,7 +249,7 @@ int main(int argc, char **argv) {
             //if(fres3 == 0){
 
             //}
-
+            }
         }
 
         else if(strcmp(option, "status") == 0){ //&& strcmp(flag, "-") == 0 && strcmp(programs, "-") == 0){ // por algum motivo, o modo status precisa de ler a flag e os programs 
