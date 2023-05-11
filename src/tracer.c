@@ -110,7 +110,6 @@ char** parse_pipeline(const char* commandString, int* numCommands) {
 
 int exec_command(char* cmd){
     char* args[10]; // assumimos que nenhum comando tem mais que 10 argumentos
-    //char* string;
     int i = 0;
 
     char* command = strdup(cmd);
@@ -252,25 +251,11 @@ int main(int argc, char **argv) {
                     printf("\n");
 
                     //-----------------------------------------
-                    /*
-                    // Testar se a estrutura foi de facto criada
-
-                    printf("\n");
-                    printf("ID Processo: %d\n", p->pid);
-                    printf("Nome: %s\n", p->prog_name);
-                    printf("Tempo em que iniciou: %d\n", p->time);
-                    printf("Argumentos:\n");
-                    for (int i = 1; i < p->num_args; i++) {
-                        printf("  %s\n", p->arguments[i]);
-                    }
-                    */
-                    //-----------------------------------------
                     
                     int fd = open("FIFO", O_WRONLY);
                     if(fd < 0){
                         perror("Erro no open!\n");
                     }
-
 
                     //------------------------------------------------------------------
 
@@ -332,7 +317,6 @@ int main(int argc, char **argv) {
                 wait(&status);
                 if(WEXITSTATUS(status) < 255){
                     printf("\n");
-                    //printf("Ended in %d ms\n", end_time_in_mill);
                     printf("\n");
                 }
                 else{
@@ -408,7 +392,6 @@ int main(int argc, char **argv) {
                 wait(&status);
                 if(WEXITSTATUS(status) < 255){
                     printf("\n");
-                    //printf("Ended in %d ms\n", end_time_in_mill);
                     printf("\n");
                 }
                 else{

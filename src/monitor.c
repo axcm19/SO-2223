@@ -27,9 +27,7 @@ int guardaNoArray(Msg prog){
     map.pid = prog.pid;
     map.time = prog.time;
     strcpy(map.nome,prog.prog_name);
-    //map.nome = prog.prog_name;
     arr_map[posicao] = map;
-    //printf("Array mapa pid=%d  time=%d nome=%s\n",arr_map[posicao].pid,arr_map[posicao].time,arr_map[posicao].nome);
     posicao++;
     return 1;
 }
@@ -72,7 +70,6 @@ int printStatus(int fd){
         gettimeofday(&begin, NULL);
         time = (begin.tv_sec) * 1000 + (begin.tv_usec) / 1000;
         final = time - arr_map[i].time;
-        //sprintf(message,"Status: pid=%d time=%d nome=%s\n",arr_map[i].pid,final,arr_map[i].nome);
         sprintf(message,"%d %s %d ms\n", arr_map[i].pid, arr_map[i].nome, final);
         write(fd,&message,strlen(message));
         write(1,&message,strlen(message));    
@@ -94,14 +91,6 @@ int main(int argc, char **argv) {
             perror("Erro no open!\n");
         }
 
-        /*
-        int fdstatus = open("FIFOSTATUS", O_RDWR);
-
-        if(fdstatus < 0){
-            perror("Erro no open do Status!\n");
-        }
-        */
-
         int res;
         Msg aux;
 
@@ -109,7 +98,6 @@ int main(int argc, char **argv) {
         while((res = read(fd, &aux, sizeof(Msg))) > 0){
 
             if(aux.type ==1){
-                //write(1, &aux, res); // escreve no terminal
                 printf("\nLi do pipe %d \n", aux.pid);
                 guardaNoArray(aux);
             }
@@ -137,7 +125,6 @@ int main(int argc, char **argv) {
                         gettimeofday(&begin, NULL);
                         time = (begin.tv_sec) * 1000 + (begin.tv_usec) / 1000;
                         final = time - arr_map[i].time;
-                        //sprintf(message,"Status: pid=%d time=%d nome=%s\n",arr_map[i].pid,final,arr_map[i].nome);
                         sprintf(message,"%d %s %d ms\n",arr_map[i].pid, arr_map[i].nome, final);
                         write(fdstatus,&message,strlen(message));
                         write(1,&message,strlen(message));
